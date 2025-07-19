@@ -15,11 +15,7 @@ type Config = {
 
 export function register(config?: Config) {
   if ('serviceWorker' in navigator) {
-    const publicUrl = new URL(process.env.PUBLIC_URL || '', window.location.href);
-    if (publicUrl.origin !== window.location.origin) {
-      return;
-    }
-
+    // In Vite, we don't need PUBLIC_URL logic - just use the root path
     window.addEventListener('load', () => {
       const swUrl = '/sw.js';
 
