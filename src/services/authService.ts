@@ -6,6 +6,15 @@ const ZITADEL_DOMAIN = 'arlo-gusfzw.us1.zitadel.cloud';
 const CLIENT_ID = import.meta.env.VITE_ZITADEL_CLIENT_ID || 'your-client-id';
 const REDIRECT_URI = import.meta.env.VITE_REDIRECT_URI || 'https://arlo.jacobtartabini.com/auth/callback';
 
+// Debug environment variables
+console.log('Auth Service Environment Check:', {
+  CLIENT_ID,
+  REDIRECT_URI,
+  hasClientId: !!import.meta.env.VITE_ZITADEL_CLIENT_ID,
+  hasRedirectUri: !!import.meta.env.VITE_REDIRECT_URI,
+  allEnvVars: import.meta.env
+});
+
 // Zitadel OIDC endpoints
 const ENDPOINTS = {
   authorization: `https://${ZITADEL_DOMAIN}/oauth/v2/authorize`,
