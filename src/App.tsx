@@ -7,7 +7,11 @@ import Dashboard from "./pages/Dashboard";
 import Settings from "./pages/Settings";
 import Unauthorized from "./pages/Unauthorized";
 import NotFound from "./pages/NotFound";
+import Login from "./pages/Login";
+import AuthCallback from "./pages/AuthCallback";
+import ProtectedRoute from "./components/ProtectedRoute";
 import { ThemeProvider } from "./providers/ThemeProvider";
+import { AuthProvider } from "./providers/AuthProvider";
 import { ArloProvider } from "./providers/ArloProvider";
 
 const queryClient = new QueryClient();
@@ -15,22 +19,44 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider defaultTheme="dark" storageKey="arlo-ui-theme">
-      <ArloProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/unauthorized" element={<Unauthorized />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </ArloProvider>
+      <AuthProvider>
+        <ArloProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                {/* Public routes */}
+                <Route path="/login" element={<Login />} />
+                <Route path="/auth/callback" element={<AuthCallback />} />
+                
+                {/* Protected routes */}
+                <Route path="/" element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/dashboard" element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/settings" element={
+                  <ProtectedRoute>
+                    <Settings />
+                  </ProtectedRoute>
+                } />
+                
+                {/* Network/connection issues (separate from auth) */}
+                <Route path="/unauthorized" element={<Unauthorized />} />
+                
+                {/* Catch-all route */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </ArloProvider>
+      </AuthProvider>
     </ThemeProvider>
   </QueryClientProvider>
 );
