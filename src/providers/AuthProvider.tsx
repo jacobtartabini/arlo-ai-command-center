@@ -1,132 +1,50 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { AuthContextType, AuthState, AuthUser } from '@/types/auth';
-import { authService } from '@/services/authService';
+'use client';
+
+import { createContext, useContext, ReactNode } from 'react';
+import { useSession, signIn, signOut } from 'next-auth/react';
+
+interface AuthContextType {
+  user: any;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  error: string | null;
+  login: () => Promise<void>;
+  logout: () => Promise<void>;
+  refreshSession: () => Promise<void>; // kept for compatibility
+}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const { data: session, status } = useSession();
 
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [authState, setAuthState] = useState<AuthState>({
-    user: null,
-    isAuthenticated: false,
-    isLoading: true,
-    error: null,
-  });
-
-  // Initialize authentication state
-  useEffect(() => {
-    const initAuth = async () => {
-      try {
-        const storedUser = authService.getStoredUser();
-        setAuthState({
-          user: storedUser,
-          isAuthenticated: !!storedUser,
-          isLoading: false,
-          error: null,
-        });
-      } catch (error) {
-        console.error('Auth initialization failed:', error);
-        setAuthState({
-          user: null,
-          isAuthenticated: false,
-          isLoading: false,
-          error: 'Failed to initialize authentication',
-        });
-      }
-    };
-
-    initAuth();
-  }, []);
-
-  // Login function
-  const login = async (): Promise<void> => {
+  const login = async () => {
     try {
-      setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
-      await authService.initiateLogin();
-      // Note: This will redirect, so state update won't complete
+      await signIn('zitadel'); // Triggers Zitadel OAuth login
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Login failed';
-      setAuthState(prev => ({
-        ...prev,
-        isLoading: false,
-        error: errorMessage,
-      }));
-      throw error;
+      console.error('Login error:', error);
     }
   };
 
-  // Logout function
-  const logout = async (): Promise<void> => {
+  const logout = async () => {
     try {
-      setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
-      
-      const currentUser = authState.user;
-      await authService.logout(currentUser?.idToken);
-      
-      setAuthState({
-        user: null,
-        isAuthenticated: false,
-        isLoading: false,
-        error: null,
-      });
+      await signOut({ callbackUrl: '/' });
     } catch (error) {
-      console.error('Logout failed:', error);
-      // Always clear state even if remote logout fails
-      setAuthState({
-        user: null,
-        isAuthenticated: false,
-        isLoading: false,
-        error: null,
-      });
+      console.error('Logout error:', error);
     }
   };
 
-  // Refresh session
-  const refreshSession = async (): Promise<void> => {
-    try {
-      const storedUser = authService.getStoredUser();
-      setAuthState(prev => ({
-        ...prev,
-        user: storedUser,
-        isAuthenticated: !!storedUser,
-        error: null,
-      }));
-    } catch (error) {
-      console.error('Session refresh failed:', error);
-      setAuthState(prev => ({
-        ...prev,
-        user: null,
-        isAuthenticated: false,
-        error: 'Session refresh failed',
-      }));
-    }
-  };
-
-  // Handle auth success (called from callback page)
-  const handleAuthSuccess = (user: AuthUser) => {
-    setAuthState({
-      user,
-      isAuthenticated: true,
-      isLoading: false,
-      error: null,
-    });
-  };
-
-  // Handle auth error
-  const handleAuthError = (error: string) => {
-    setAuthState({
-      user: null,
-      isAuthenticated: false,
-      isLoading: false,
-      error,
-    });
+  const refreshSession = async () => {
+    // Optional – no-op placeholder for compatibility
+    // NextAuth handles refreshing internally if configured
+    return;
   };
 
   const contextValue: AuthContextType = {
-    ...authState,
+    user: session?.user ?? null,
+    isAuthenticated: !!session,
+    isLoading: status === 'loading',
+    error: null, // You can handle errors from the `useSession` status or query params if needed
     login,
     logout,
     refreshSession,
@@ -139,24 +57,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   );
 };
 
-// Custom hook to use auth context
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 };
 
-// Helper hook for components that require authentication
 export const useRequireAuth = () => {
   const { isAuthenticated, isLoading } = useAuth();
-  
-  useEffect(() => {
+
+  // Redirect to login if not authenticated
+  if (typeof window !== 'undefined') {
     if (!isLoading && !isAuthenticated) {
       window.location.href = '/login';
     }
-  }, [isAuthenticated, isLoading]);
+  }
 
   return { isAuthenticated, isLoading };
 };
