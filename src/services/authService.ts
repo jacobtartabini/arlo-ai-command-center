@@ -58,10 +58,27 @@ class AuthService {
   // Handle OAuth callback and exchange code for tokens
   async handleCallback(code: string, state: string): Promise<AuthUser> {
     try {
+      console.log('Handling callback with code:', code, 'state:', state);
+      
       // Retrieve and validate PKCE data
       const { codeVerifier, state: storedState } = retrieveAndClearPKCEData();
+      
+      console.log('PKCE Data retrieved:', { 
+        codeVerifier: codeVerifier ? 'EXISTS' : 'MISSING', 
+        storedState, 
+        receivedState: state,
+        statesMatch: state === storedState
+      });
 
-      if (!codeVerifier || !storedState || state !== storedState) {
+      if (!codeVerifier) {
+        throw new Error('Missing code verifier - session may have expired');
+      }
+
+      if (!storedState) {
+        throw new Error('Missing stored state - session may have expired');
+      }
+
+      if (state !== storedState) {
         throw new Error('Invalid state parameter - possible CSRF attack');
       }
 
