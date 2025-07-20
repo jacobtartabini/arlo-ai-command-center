@@ -27,12 +27,31 @@ class AuthService {
   // Initiate OIDC login flow with PKCE
   async initiateLogin(): Promise<void> {
     try {
+      console.log('Initiating login flow...');
+      
       const codeVerifier = generateCodeVerifier();
       const codeChallenge = await generateCodeChallenge(codeVerifier);
       const state = generateState();
 
+      console.log('Generated PKCE data:', {
+        codeVerifier: codeVerifier.substring(0, 10) + '...',
+        codeChallenge: codeChallenge.substring(0, 10) + '...',
+        state: state
+      });
+
       // Store PKCE data for callback
       storePKCEData(codeVerifier, state);
+      
+      // Verify storage worked
+      const stored = {
+        codeVerifier: sessionStorage.getItem('pkce_code_verifier'),
+        state: sessionStorage.getItem('oauth_state')
+      };
+      console.log('Stored PKCE data verification:', {
+        codeVerifierStored: !!stored.codeVerifier,
+        stateStored: !!stored.state,
+        sessionStorageWorks: typeof sessionStorage !== 'undefined'
+      });
 
       // Build authorization URL
       const params = new URLSearchParams({
@@ -46,6 +65,7 @@ class AuthService {
       });
 
       const authUrl = `${ENDPOINTS.authorization}?${params.toString()}`;
+      console.log('Redirecting to:', authUrl);
       
       // Redirect to Zitadel
       window.location.href = authUrl;

@@ -12,6 +12,14 @@ const AuthCallback: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Debug sessionStorage immediately
+    console.log('AuthCallback loaded, checking sessionStorage:', {
+      codeVerifier: sessionStorage.getItem('pkce_code_verifier'),
+      state: sessionStorage.getItem('oauth_state'),
+      sessionStorageKeys: Object.keys(sessionStorage),
+      urlParams: window.location.search
+    });
+    
     const handleCallback = async () => {
       try {
         const code = searchParams.get('code');
