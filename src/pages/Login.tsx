@@ -10,24 +10,23 @@ const Login: React.FC = () => {
   useEffect(() => {
     const verifyAccess = async () => {
       try {
-        const verifyUrl = process.env.NEXT_PUBLIC_TAILSCALE_VERIFY_URL;
-        if (!verifyUrl) {
-          setError('Verification URL not configured.');
-          return;
-        }
+        // <-- Hardcoded Tailscale Funnel URL here:
+        const verifyUrl = "https://jacobs-macbook-pro.tailf531bd.ts.net/api/verify";
 
         const response = await fetch(verifyUrl, {
           method: 'GET',
           credentials: 'include',
+          // Do NOT set X-Tailscale-User or X-Tailscale-Name headers here
+          // Tailscale Funnel will add those automatically
         });
 
-        const data = await response.json();
-
         if (!response.ok) {
+          const data = await response.json().catch(() => ({}));
           console.warn('Verification failed:', data);
           setError(data.error || 'Access denied. Please connect to Tailscale.');
           setAccessVerified(false);
         } else {
+          const data = await response.json().catch(() => ({}));
           console.log('Access verified:', data);
           setError(null);
           setAccessVerified(true);
@@ -56,7 +55,7 @@ const Login: React.FC = () => {
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl opacity-20 animate-pulse" />
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent/10 rounded-full blur-3xl opacity-20 animate-pulse delay-1000" />
-      
+
       {/* Login Card */}
       <div className="relative z-10 w-full max-w-md mx-4">
         <div className="backdrop-blur-xl bg-card/30 border border-border/50 rounded-2xl p-8 shadow-2xl">
