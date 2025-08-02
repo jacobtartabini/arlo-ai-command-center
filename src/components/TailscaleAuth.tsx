@@ -57,7 +57,7 @@ const TailscaleAuth: React.FC = () => {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
-        const response = await fetch('https://api.arlo.jacobtartabini.com/auth/verify', {
+        const response = await fetch('https://jacobs-macbook-pro.tailf531bd.ts.net/api/verify', {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
