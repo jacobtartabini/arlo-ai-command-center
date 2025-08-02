@@ -8,11 +8,19 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+
+    // Optional: Proxy Tailscale backend during local dev
+    proxy: {
+      "/api/verify": {
+        target: "https://jacobs-macbook-pro.tailf531bd.ts.net",
+        changeOrigin: true,
+        secure: false,
+      },
+    },
   },
   plugins: [
     react(),
-    mode === 'development' &&
-    componentTagger(),
+    mode === 'development' && componentTagger(),
   ].filter(Boolean),
   resolve: {
     alias: {
