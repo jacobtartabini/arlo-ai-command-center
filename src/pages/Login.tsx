@@ -1,10 +1,37 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/providers/AuthProvider';
 import { Shield } from 'lucide-react';
 
 const Login: React.FC = () => {
-  const { login, isLoading, error } = useAuth();
+  const { login, isLoading, error, setError } = useAuth();
+
+  useEffect(() => {
+    const verifyAccess = async () => {
+      try {
+        const verifyUrl = process.env.NEXT_PUBLIC_TAILSCALE_VERIFY_URL;
+        if (!verifyUrl) {
+          setError('Verification URL not configured.');
+          return;
+        }
+
+        const response = await fetch(verifyUrl, {
+          method: 'GET',
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          setError(data.error || 'Access denied. Connect to Tailscale network.');
+        } else {
+          setError(null);
+        }
+      } catch (err) {
+        setError('Failed to verify access. Check network connection.');
+      }
+    };
+
+    verifyAccess();
+  }, [setError]);
 
   const handleLogin = async () => {
     try {
@@ -51,7 +78,7 @@ const Login: React.FC = () => {
           {/* Login Button */}
           <Button
             onClick={handleLogin}
-            disabled={isLoading}
+            disabled={isLoading || Boolean(error)} 
             className="w-full h-12 text-lg font-medium bg-primary hover:bg-primary/90 text-primary-foreground border-0 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden group"
           >
             {isLoading ? (
