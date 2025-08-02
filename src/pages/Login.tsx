@@ -2,22 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/providers/AuthProvider';
 import { Shield } from 'lucide-react';
+import { useRouter } from 'next/router'; // <-- Added for routing
 
 const Login: React.FC = () => {
+  const router = useRouter(); // <-- Needed for redirection
   const { login, isLoading, error, setError } = useAuth();
   const [accessVerified, setAccessVerified] = useState(false);
 
   useEffect(() => {
     const verifyAccess = async () => {
       try {
-        // <-- Hardcoded Tailscale Funnel URL here:
         const verifyUrl = "https://jacobs-macbook-pro.tailf531bd.ts.net/api/verify";
 
         const response = await fetch(verifyUrl, {
           method: 'GET',
           credentials: 'include',
-          // Do NOT set X-Tailscale-User or X-Tailscale-Name headers here
-          // Tailscale Funnel will add those automatically
         });
 
         if (!response.ok) {
@@ -40,6 +39,13 @@ const Login: React.FC = () => {
 
     verifyAccess();
   }, [setError]);
+
+  // 🔁 Redirect after successful verification
+  useEffect(() => {
+    if (accessVerified) {
+      router.push('/dashboard');
+    }
+  }, [accessVerified, router]);
 
   const handleLogin = async () => {
     try {
