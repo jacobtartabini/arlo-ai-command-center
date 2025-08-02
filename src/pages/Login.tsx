@@ -1,10 +1,11 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/providers/AuthProvider';
 import { Shield } from 'lucide-react';
 
 const Login: React.FC = () => {
   const { login, isLoading, error, setError } = useAuth();
+  const [accessVerified, setAccessVerified] = useState(false);
 
   useEffect(() => {
     const verifyAccess = async () => {
@@ -17,16 +18,24 @@ const Login: React.FC = () => {
 
         const response = await fetch(verifyUrl, {
           method: 'GET',
+          credentials: 'include',
         });
 
+        const data = await response.json();
+
         if (!response.ok) {
-          const data = await response.json();
-          setError(data.error || 'Access denied. Connect to Tailscale network.');
+          console.warn('Verification failed:', data);
+          setError(data.error || 'Access denied. Please connect to Tailscale.');
+          setAccessVerified(false);
         } else {
+          console.log('Access verified:', data);
           setError(null);
+          setAccessVerified(true);
         }
       } catch (err) {
+        console.error('Network verification failed:', err);
         setError('Failed to verify access. Check network connection.');
+        setAccessVerified(false);
       }
     };
 
@@ -78,7 +87,7 @@ const Login: React.FC = () => {
           {/* Login Button */}
           <Button
             onClick={handleLogin}
-            disabled={isLoading || Boolean(error)} 
+            disabled={isLoading || !accessVerified}
             className="w-full h-12 text-lg font-medium bg-primary hover:bg-primary/90 text-primary-foreground border-0 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden group"
           >
             {isLoading ? (
@@ -92,7 +101,6 @@ const Login: React.FC = () => {
                 Sign in with Tailscale
               </>
             )}
-            
             {/* Button glow effect */}
             <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           </Button>
