@@ -4,40 +4,71 @@ import { useAuth } from '@/providers/AuthProvider';
 import { Shield } from 'lucide-react';
 import { useRouter } from 'next/router';
 
+const STORAGE_KEY = 'arlo_access_verified';
+const STORAGE_EXPIRY_KEY = 'arlo_access_verified_expiry';
+const EXPIRY_MS = 15 * 60 * 1000; // 15 minutes
+
 const Login: React.FC = () => {
   const router = useRouter();
   const { login, isLoading, error, setError } = useAuth();
-  const [accessVerified, setAccessVerified] = useState<boolean | null>(null); // null = loading
+  const [accessVerified, setAccessVerified] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const verifyAccess = async () => {
-      try {
-        const verifyUrl = "https://jacobs-macbook-pro.tailf531bd.ts.net/api/verify";
+    const checkStoredVerification = () => {
+      const stored = sessionStorage.getItem(STORAGE_KEY);
+      const expiry = sessionStorage.getItem(STORAGE_EXPIRY_KEY);
 
-        const response = await fetch(verifyUrl, {
-          method: 'GET',
-          credentials: 'include',
-        });
-
-        if (!response.ok) {
-          const data = await response.json().catch(() => ({}));
-          console.warn('Verification failed:', data);
-          setError(data.error || 'Access denied. Please connect to Tailscale.');
-          setAccessVerified(false);
-        } else {
-          const data = await response.json().catch(() => ({}));
-          console.log('Access verified:', data);
-          setError(null);
+      if (stored === 'true' && expiry) {
+        const expiryTime = parseInt(expiry, 10);
+        if (Date.now() < expiryTime) {
+          // Still valid
+          console.log('Using cached verification');
           setAccessVerified(true);
+          return true;
         }
-      } catch (err) {
-        console.error('Network verification failed:', err);
-        setError('Failed to verify access. Check network connection.');
-        setAccessVerified(false);
       }
+      return false;
     };
 
-    verifyAccess();
+    if (!checkStoredVerification()) {
+      // If no valid cache, do real network verification
+      const verifyAccess = async () => {
+        try {
+          const verifyUrl = "https://jacobs-macbook-pro.tailf531bd.ts.net/api/verify";
+
+          const response = await fetch(verifyUrl, {
+            method: 'GET',
+            credentials: 'include',
+          });
+
+          if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            console.warn('Verification failed:', data);
+            setError(data.error || 'Access denied. Please connect to Tailscale.');
+            setAccessVerified(false);
+            sessionStorage.removeItem(STORAGE_KEY);
+            sessionStorage.removeItem(STORAGE_EXPIRY_KEY);
+          } else {
+            const data = await response.json().catch(() => ({}));
+            console.log('Access verified:', data);
+            setError(null);
+            setAccessVerified(true);
+
+            // Store verification with expiry
+            sessionStorage.setItem(STORAGE_KEY, 'true');
+            sessionStorage.setItem(STORAGE_EXPIRY_KEY, (Date.now() + EXPIRY_MS).toString());
+          }
+        } catch (err) {
+          console.error('Network verification failed:', err);
+          setError('Failed to verify access. Check network connection.');
+          setAccessVerified(false);
+          sessionStorage.removeItem(STORAGE_KEY);
+          sessionStorage.removeItem(STORAGE_EXPIRY_KEY);
+        }
+      };
+
+      verifyAccess();
+    }
   }, [setError]);
 
   // Redirect when accessVerified becomes true
@@ -48,7 +79,6 @@ const Login: React.FC = () => {
     }
   }, [accessVerified, router]);
 
-  // Show a loading message while verification is in progress
   if (accessVerified === null) {
     return (
       <div className="min-h-screen flex items-center justify-center text-center">
