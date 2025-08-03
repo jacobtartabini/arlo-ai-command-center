@@ -2,12 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/providers/AuthProvider';
 import { Shield } from 'lucide-react';
-import { useRouter } from 'next/router'; // <-- Added for routing
+import { useRouter } from 'next/router';
 
 const Login: React.FC = () => {
-  const router = useRouter(); // <-- Needed for redirection
+  const router = useRouter();
   const { login, isLoading, error, setError } = useAuth();
-  const [accessVerified, setAccessVerified] = useState(false);
+  const [accessVerified, setAccessVerified] = useState<boolean | null>(null); // null = loading
 
   useEffect(() => {
     const verifyAccess = async () => {
@@ -40,12 +40,22 @@ const Login: React.FC = () => {
     verifyAccess();
   }, [setError]);
 
-  // 🔁 Redirect after successful verification
+  // Redirect when accessVerified becomes true
   useEffect(() => {
     if (accessVerified) {
+      console.log("Access verified, redirecting to /dashboard");
       router.push('/dashboard');
     }
   }, [accessVerified, router]);
+
+  // Show a loading message while verification is in progress
+  if (accessVerified === null) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-center">
+        <p className="text-lg text-muted-foreground">Verifying access, please wait...</p>
+      </div>
+    );
+  }
 
   const handleLogin = async () => {
     try {
