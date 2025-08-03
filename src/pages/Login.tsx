@@ -2,16 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/providers/AuthProvider';
 import { Shield } from 'lucide-react';
-import { useRouter } from 'next/router';
+import { useNavigate } from 'react-router-dom';
 
 const STORAGE_KEY = 'arlo_access_verified';
 const STORAGE_EXPIRY_KEY = 'arlo_access_verified_expiry';
 const EXPIRY_MS = 15 * 60 * 1000; // 15 minutes
 
 const Login: React.FC = () => {
-  const router = useRouter();
-  const { login, isLoading, error, setError } = useAuth();
+  const navigate = useNavigate();
+  const { login, isLoading, error } = useAuth();
   const [accessVerified, setAccessVerified] = useState<boolean | null>(null);
+  const [verificationError, setVerificationError] = useState<string | null>(null);
 
   useEffect(() => {
     const checkStoredVerification = () => {
@@ -44,14 +45,14 @@ const Login: React.FC = () => {
           if (!response.ok) {
             const data = await response.json().catch(() => ({}));
             console.warn('Verification failed:', data);
-            setError(data.error || 'Access denied. Please connect to Tailscale.');
+            setVerificationError(data.error || 'Access denied. Please connect to Tailscale.');
             setAccessVerified(false);
             sessionStorage.removeItem(STORAGE_KEY);
             sessionStorage.removeItem(STORAGE_EXPIRY_KEY);
           } else {
             const data = await response.json().catch(() => ({}));
             console.log('Access verified:', data);
-            setError(null);
+            setVerificationError(null);
             setAccessVerified(true);
 
             // Store verification with expiry
@@ -60,7 +61,7 @@ const Login: React.FC = () => {
           }
         } catch (err) {
           console.error('Network verification failed:', err);
-          setError('Failed to verify access. Check network connection.');
+          setVerificationError('Failed to verify access. Check network connection.');
           setAccessVerified(false);
           sessionStorage.removeItem(STORAGE_KEY);
           sessionStorage.removeItem(STORAGE_EXPIRY_KEY);
@@ -69,15 +70,15 @@ const Login: React.FC = () => {
 
       verifyAccess();
     }
-  }, [setError]);
+  }, []);
 
   // Redirect when accessVerified becomes true
   useEffect(() => {
     if (accessVerified) {
       console.log("Access verified, redirecting to /dashboard");
-      router.push('/dashboard');
+      navigate('/dashboard');
     }
-  }, [accessVerified, router]);
+  }, [accessVerified, navigate]);
 
   if (accessVerified === null) {
     return (
@@ -123,9 +124,9 @@ const Login: React.FC = () => {
           </div>
 
           {/* Error Message */}
-          {error && (
+          {(error || verificationError) && (
             <div className="mb-6 p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
-              <p className="text-destructive text-sm text-center">{error}</p>
+              <p className="text-destructive text-sm text-center">{error || verificationError}</p>
             </div>
           )}
 
