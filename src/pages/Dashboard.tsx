@@ -12,7 +12,7 @@ import { Settings, LogOut, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function Dashboard() {
-  const { user, logout } = useAuth();
+  const { user, logout, tailscaleVerified } = useAuth();
   const { isConnected, checkConnection } = useArlo();
   const navigate = useNavigate();
   const [widgets, setWidgets] = useState<Array<{
@@ -24,6 +24,12 @@ export default function Dashboard() {
 
   useEffect(() => {
     const verifyConnection = async () => {
+      // If user is authenticated via Tailscale, don't check Arlo connection
+      // as the verification endpoint and Arlo endpoint might be different
+      if (tailscaleVerified) {
+        return;
+      }
+      
       const connected = await checkConnection();
       if (!connected) {
         navigate('/unauthorized');
@@ -31,7 +37,7 @@ export default function Dashboard() {
     };
 
     verifyConnection();
-  }, [checkConnection, navigate]);
+  }, [checkConnection, navigate, tailscaleVerified]);
 
   const addWidget = (type: 'weather' | 'map' | 'health', data?: any) => {
     const newWidget = {
@@ -64,7 +70,8 @@ export default function Dashboard() {
     }
   };
 
-  if (!isConnected) {
+  // Only show connection check for non-Tailscale users
+  if (!tailscaleVerified && !isConnected) {
     return null; // Will redirect to unauthorized
   }
 
@@ -84,7 +91,7 @@ export default function Dashboard() {
             <div className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-card/20 backdrop-blur-sm border border-border/50">
               <User className="w-4 h-4 text-muted-foreground" />
               <span className="text-sm text-foreground">
-                {user?.name || user?.email}
+                {user?.name || user?.email || (tailscaleVerified ? 'Tailscale User' : 'Guest')}
               </span>
             </div>
             
