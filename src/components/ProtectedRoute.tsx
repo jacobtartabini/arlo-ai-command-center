@@ -8,7 +8,7 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, tailscaleVerified, isLoading } = useAuth();
 
   // Show loading spinner while checking authentication
   if (isLoading) {
@@ -24,8 +24,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
   }
 
-  // Redirect to login if not authenticated
-  if (!isAuthenticated) {
+  // Redirect to login if not authenticated via either method
+  if (!isAuthenticated && !tailscaleVerified) {
     return <Navigate to="/login" replace />;
   }
 

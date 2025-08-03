@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Shield, Wifi, Lock } from 'lucide-react';
+import { useAuth } from '@/providers/AuthProvider';
 
 interface Message {
   text: string;
@@ -10,6 +11,7 @@ interface Message {
 
 const TailscaleAuth: React.FC = () => {
   const navigate = useNavigate();
+  const { verifyTailscaleAccess } = useAuth();
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const [isVerifying, setIsVerifying] = useState(true);
   const [networkDenied, setNetworkDenied] = useState(false);
@@ -53,37 +55,19 @@ const TailscaleAuth: React.FC = () => {
         // Wait a moment for better UX
         await new Promise(resolve => setTimeout(resolve, 2000));
 
-        // Attempt to reach your private Tailscale API
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+        // Use the auth context to verify access
+        await verifyTailscaleAccess();
 
-        const response = await fetch('https://jacobs-macbook-pro.tailf531bd.ts.net/api/verify', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          signal: controller.signal,
-        });
-
-        clearTimeout(timeoutId);
-
-        if (response.ok) {
-          // Show success message briefly
-          setShowMessages(false);
-          setCurrentMessageIndex(0);
-          
-          // Brief success animation
-          setTimeout(() => {
-            setIsVerifying(false);
-            // Redirect to dashboard after success animation
-            setTimeout(() => navigate('/dashboard'), 1000);
-          }, 500);
-        } else {
-          // Network accessible but not authorized
+        // Show success message briefly
+        setShowMessages(false);
+        setCurrentMessageIndex(0);
+        
+        // Brief success animation
+        setTimeout(() => {
           setIsVerifying(false);
-          setNetworkDenied(true);
-          setShowMessages(false);
-        }
+          // Redirect to dashboard after success animation
+          setTimeout(() => navigate('/dashboard'), 1000);
+        }, 500);
       } catch (error) {
         // Network not accessible or timeout
         console.log('Tailscale network verification failed:', error);
@@ -94,7 +78,7 @@ const TailscaleAuth: React.FC = () => {
     };
 
     verifyTailscaleConnection();
-  }, [navigate]);
+  }, [navigate, verifyTailscaleAccess]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">

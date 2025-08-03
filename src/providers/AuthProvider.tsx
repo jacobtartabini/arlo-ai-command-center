@@ -12,6 +12,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [authState, setAuthState] = useState<AuthState>({
     user: null,
     isAuthenticated: false,
+    tailscaleVerified: false,
     isLoading: true,
     error: null,
   });
@@ -21,9 +22,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const initAuth = async () => {
       try {
         const storedUser = authService.getStoredUser();
+        // Check for stored Tailscale verification
+        const tailscaleVerified = sessionStorage.getItem('arlo_access_verified') === 'true';
+        const verificationExpiry = sessionStorage.getItem('arlo_access_verified_expiry');
+        const isVerificationValid = verificationExpiry && Date.now() < parseInt(verificationExpiry);
+        
         setAuthState({
           user: storedUser,
           isAuthenticated: !!storedUser,
+          tailscaleVerified: tailscaleVerified && !!isVerificationValid,
           isLoading: false,
           error: null,
         });
@@ -32,6 +39,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setAuthState({
           user: null,
           isAuthenticated: false,
+          tailscaleVerified: false,
           isLoading: false,
           error: 'Failed to initialize authentication',
         });
@@ -66,18 +74,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const currentUser = authState.user;
       await authService.logout(currentUser?.idToken);
       
+      // Clear Tailscale verification as well
+      sessionStorage.removeItem('arlo_access_verified');
+      sessionStorage.removeItem('arlo_access_verified_expiry');
+      
       setAuthState({
         user: null,
         isAuthenticated: false,
+        tailscaleVerified: false,
         isLoading: false,
         error: null,
       });
     } catch (error) {
       console.error('Logout failed:', error);
       // Always clear state even if remote logout fails
+      sessionStorage.removeItem('arlo_access_verified');
+      sessionStorage.removeItem('arlo_access_verified_expiry');
+      
       setAuthState({
         user: null,
         isAuthenticated: false,
+        tailscaleVerified: false,
         isLoading: false,
         error: null,
       });
@@ -105,14 +122,69 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  // Verify Tailscale access
+  const verifyTailscaleAccess = async (): Promise<void> => {
+    try {
+      const response = await fetch('/api/verify', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Access denied. Please connect to Tailscale.');
+      }
+
+      // Store verification with expiry (15 minutes)
+      const expiry = Date.now() + (15 * 60 * 1000);
+      sessionStorage.setItem('arlo_access_verified', 'true');
+      sessionStorage.setItem('arlo_access_verified_expiry', expiry.toString());
+      
+      setAuthState(prev => ({
+        ...prev,
+        tailscaleVerified: true,
+        error: null,
+      }));
+    } catch (error) {
+      sessionStorage.removeItem('arlo_access_verified');
+      sessionStorage.removeItem('arlo_access_verified_expiry');
+      
+      setAuthState(prev => ({
+        ...prev,
+        tailscaleVerified: false,
+        error: error instanceof Error ? error.message : 'Failed to verify access',
+      }));
+      throw error;
+    }
+  };
+
+  // Set Tailscale verification status
+  const setTailscaleVerified = (verified: boolean) => {
+    if (verified) {
+      const expiry = Date.now() + (15 * 60 * 1000);
+      sessionStorage.setItem('arlo_access_verified', 'true');
+      sessionStorage.setItem('arlo_access_verified_expiry', expiry.toString());
+    } else {
+      sessionStorage.removeItem('arlo_access_verified');
+      sessionStorage.removeItem('arlo_access_verified_expiry');
+    }
+    
+    setAuthState(prev => ({
+      ...prev,
+      tailscaleVerified: verified,
+    }));
+  };
+
   // Handle auth success (called from callback page)
   const handleAuthSuccess = (user: AuthUser) => {
-    setAuthState({
+    setAuthState(prev => ({
+      ...prev,
       user,
       isAuthenticated: true,
       isLoading: false,
       error: null,
-    });
+    }));
   };
 
   // Handle auth error
@@ -120,6 +192,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setAuthState({
       user: null,
       isAuthenticated: false,
+      tailscaleVerified: false,
       isLoading: false,
       error,
     });
@@ -130,6 +203,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login,
     logout,
     refreshSession,
+    verifyTailscaleAccess,
+    setTailscaleVerified,
   };
 
   return (

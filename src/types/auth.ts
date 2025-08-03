@@ -32,6 +32,7 @@ export interface AuthUser {
 export interface AuthState {
   user: AuthUser | null;
   isAuthenticated: boolean;
+  tailscaleVerified: boolean;
   isLoading: boolean;
   error: string | null;
 }
@@ -40,4 +41,6 @@ export interface AuthContextType extends AuthState {
   login: () => Promise<void>;
   logout: () => Promise<void>;
   refreshSession: () => Promise<void>;
+  verifyTailscaleAccess: () => Promise<void>;
+  setTailscaleVerified: (verified: boolean) => void;
 }
