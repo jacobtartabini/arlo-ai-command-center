@@ -8,9 +8,9 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Light mode - white background with blue accents */
-    --background: 0 0% 100%;
-    --foreground: 222 84% 5%;
+    /* Arlo Dark Theme - Fixed #0D1117 background */
+    --background: 220 13% 9%;
+    --foreground: 0 0% 98%;
 
     --card: 0 0% 100%;
     --card-foreground: 222 84% 5%;
@@ -53,8 +53,8 @@ All colors MUST be HSL.
   }
 
   .dark {
-    /* Dark mode - slate gray background with glowing blue */
-    --background: 240 13% 12%;
+    /* Arlo Dark Theme - Enhanced #0D1117 background */
+    --background: 220 13% 9%;
     --foreground: 0 0% 98%;
 
     --card: 240 13% 12%;
@@ -133,6 +133,33 @@ All colors MUST be HSL.
   
   .draggable:active {
     cursor: grabbing;
+  }
+
+  /* Core animations */
+  .core-idle {
+    animation: core-float 6s ease-in-out infinite;
+  }
+
+  .core-hover {
+    transform: scale(1.02);
+    box-shadow: 
+      0 0 30px hsl(var(--primary) / 0.3),
+      0 8px 32px hsl(var(--glass-shadow));
+  }
+
+  .neural-pulse {
+    animation: neural-pulse 3s ease-in-out infinite;
+  }
+
+  .chat-bubble-rise {
+    animation: chat-bubble-rise 0.6s ease-out;
+  }
+
+  /* Spatial grid */
+  .spatial-grid {
+    background-image: 
+      radial-gradient(circle at 1px 1px, hsl(var(--primary) / 0.1) 1px, transparent 0);
+    background-size: 40px 40px;
   }
 }
 

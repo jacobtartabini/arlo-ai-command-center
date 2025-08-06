@@ -3,24 +3,25 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/providers/AuthProvider';
 import { useArlo } from '@/providers/ArloProvider';
 import { AiCore } from '@/components/AiCore';
-import { ChatInterface } from '@/components/ChatInterface';
-import { DraggableWidget } from '@/components/DraggableWidget';
+import { SpatialChatInterface } from '@/components/SpatialChatInterface';
+import { Core } from '@/components/Core';
 import { WeatherWidget } from '@/components/widgets/WeatherWidget';
 import { MapWidget } from '@/components/widgets/MapWidget';
 import { SystemHealthWidget } from '@/components/widgets/SystemHealthWidget';
-import { Settings, LogOut, User } from 'lucide-react';
+import { Settings, LogOut, User, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function Dashboard() {
   const { user, logout, tailscaleVerified } = useAuth();
   const { isConnected, checkConnection } = useArlo();
   const navigate = useNavigate();
-  const [widgets, setWidgets] = useState<Array<{
+  const [cores, setCores] = useState<Array<{
     id: string;
     type: 'weather' | 'map' | 'health';
     position: { x: number; y: number };
     data?: any;
   }>>([]);
+  const [showNavigation, setShowNavigation] = useState(false);
 
   useEffect(() => {
     const verifyConnection = async () => {
@@ -39,27 +40,36 @@ export default function Dashboard() {
     verifyConnection();
   }, [checkConnection, navigate, tailscaleVerified]);
 
-  const addWidget = (type: 'weather' | 'map' | 'health', data?: any) => {
-    const newWidget = {
+  const addCore = (type: 'weather' | 'map' | 'health', data?: any) => {
+    const newCore = {
       id: Date.now().toString(),
       type,
       position: { 
-        x: Math.random() * (window.innerWidth - 300),
-        y: Math.random() * (window.innerHeight - 200)
+        x: 200 + Math.random() * (window.innerWidth - 600),
+        y: 200 + Math.random() * (window.innerHeight - 400)
       },
       data,
     };
-    setWidgets(prev => [...prev, newWidget]);
+    setCores(prev => [...prev, newCore]);
   };
 
-  const removeWidget = (id: string) => {
-    setWidgets(prev => prev.filter(widget => widget.id !== id));
+  const removeCore = (id: string) => {
+    setCores(prev => prev.filter(core => core.id !== id));
   };
 
-  const updateWidgetPosition = (id: string, position: { x: number; y: number }) => {
-    setWidgets(prev => prev.map(widget => 
-      widget.id === id ? { ...widget, position } : widget
+  const updateCorePosition = (id: string, position: { x: number; y: number }) => {
+    setCores(prev => prev.map(core => 
+      core.id === id ? { ...core, position } : core
     ));
+  };
+
+  const getCoreTitle = (type: string) => {
+    switch (type) {
+      case 'weather': return 'Weather Core';
+      case 'map': return 'Map Core';
+      case 'health': return 'Health Core';
+      default: return 'Core';
+    }
   };
 
   const handleLogout = async () => {
@@ -76,21 +86,43 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Navigation */}
-      <nav className="relative z-50 p-6">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-4">
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              Arlo
-            </h1>
-          </div>
+    <div 
+      className="min-h-screen relative overflow-hidden spatial-grid"
+      style={{ background: '#0D1117' }}
+    >
+      {/* Floating Navigation - Hidden by default, shows on hover */}
+      <nav 
+        className={`
+          fixed top-6 left-1/2 transform -translate-x-1/2 z-50 
+          glass rounded-full px-6 py-3 transition-all duration-300
+          ${showNavigation ? 'opacity-100 translate-y-0' : 'opacity-30 -translate-y-2'}
+        `}
+        onMouseEnter={() => setShowNavigation(true)}
+        onMouseLeave={() => setShowNavigation(false)}
+      >
+        <div className="flex items-center gap-6">
+          {/* Logo */}
+          <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            Arlo
+          </h1>
           
-          <div className="flex items-center space-x-4">
+          {/* Navigation Items */}
+          <div className="flex items-center gap-4">
+            {/* Add Core Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => addCore('weather')}
+              className="rounded-full hover:bg-primary/20"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Core
+            </Button>
+            
             {/* User Info */}
-            <div className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-card/20 backdrop-blur-sm border border-border/50">
-              <User className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm text-foreground">
+            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-card/20">
+              <User className="w-3 h-3 text-muted-foreground" />
+              <span className="text-xs text-foreground">
                 {user?.name || user?.email || (tailscaleVerified ? 'Tailscale User' : 'Guest')}
               </span>
             </div>
@@ -98,9 +130,9 @@ export default function Dashboard() {
             {/* Settings */}
             <a
               href="/settings"
-              className="p-2 rounded-lg bg-card/20 backdrop-blur-sm border border-border/50 hover:bg-card/30 transition-all duration-300 text-muted-foreground hover:text-foreground"
+              className="p-2 rounded-full hover:bg-secondary/50 transition-all duration-200"
             >
-              <Settings className="w-5 h-5" />
+              <Settings className="w-4 h-4 text-muted-foreground hover:text-foreground" />
             </a>
             
             {/* Logout */}
@@ -108,43 +140,43 @@ export default function Dashboard() {
               onClick={handleLogout}
               variant="ghost"
               size="sm"
-              className="p-2 rounded-lg bg-card/20 backdrop-blur-sm border border-border/50 hover:bg-destructive/20 hover:text-destructive transition-all duration-300"
+              className="p-2 rounded-full hover:bg-destructive/20 hover:text-destructive"
             >
-              <LogOut className="w-5 h-5" />
+              <LogOut className="w-4 h-4" />
             </Button>
           </div>
         </div>
       </nav>
 
-      {/* Background gradient effect */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5" />
-      
-      {/* AI Core */}
-      <DraggableWidget
-        id="ai-core"
-        initialPosition={{ x: window.innerWidth / 2 - 100, y: 100 }}
-        onPositionChange={() => {}}
+      {/* Central Arlo Avatar */}
+      <div 
+        className="fixed z-30"
+        style={{
+          left: window.innerWidth / 2 - 64,
+          top: window.innerHeight / 2 - 100,
+        }}
       >
         <AiCore />
-      </DraggableWidget>
+      </div>
 
-      {/* Dynamic Widgets */}
-      {widgets.map((widget) => (
-        <DraggableWidget
-          key={widget.id}
-          id={widget.id}
-          initialPosition={widget.position}
-          onPositionChange={(position) => updateWidgetPosition(widget.id, position)}
-          onClose={() => removeWidget(widget.id)}
+      {/* Dynamic Cores */}
+      {cores.map((core) => (
+        <Core
+          key={core.id}
+          id={core.id}
+          title={getCoreTitle(core.type)}
+          initialPosition={core.position}
+          onPositionChange={(position) => updateCorePosition(core.id, position)}
+          onClose={() => removeCore(core.id)}
         >
-          {widget.type === 'weather' && <WeatherWidget location={widget.data?.location} />}
-          {widget.type === 'map' && <MapWidget start={widget.data?.start} end={widget.data?.end} />}
-          {widget.type === 'health' && <SystemHealthWidget />}
-        </DraggableWidget>
+          {core.type === 'weather' && <WeatherWidget location={core.data?.location} />}
+          {core.type === 'map' && <MapWidget start={core.data?.start} end={core.data?.end} />}
+          {core.type === 'health' && <SystemHealthWidget />}
+        </Core>
       ))}
 
-      {/* Chat Interface */}
-      <ChatInterface onWidgetRequest={addWidget} />
+      {/* Spatial Chat Interface */}
+      <SpatialChatInterface onWidgetRequest={addCore} />
     </div>
   );
 }
