@@ -8,26 +8,26 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Light mode - white background with blue accents */
-    --background: 0 0% 100%;
-    --foreground: 222 84% 5%;
+    /* Dark theme - deep space background */
+    --background: 220 13% 7%;
+    --foreground: 210 40% 96%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222 84% 5%;
+    --card: 220 13% 12%;
+    --card-foreground: 210 40% 96%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 84% 5%;
+    --popover: 220 13% 12%;
+    --popover-foreground: 210 40% 96%;
 
     /* Primary blue - soft yet vivid #4A90E2 */
     --primary: 214 75% 58%;
     --primary-foreground: 0 0% 100%;
     --primary-glow: 214 95% 75%;
 
-    --secondary: 214 20% 95%;
-    --secondary-foreground: 222 84% 5%;
+    --secondary: 220 13% 18%;
+    --secondary-foreground: 210 40% 96%;
 
-    --muted: 214 20% 95%;
-    --muted-foreground: 215 16% 47%;
+    --muted: 220 13% 18%;
+    --muted-foreground: 215 20% 65%;
 
     --accent: 214 75% 58%;
     --accent-foreground: 0 0% 100%;
@@ -35,19 +35,19 @@ All colors MUST be HSL.
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
+    --border: 220 13% 18%;
+    --input: 220 13% 18%;
     --ring: 214 75% 58%;
 
-    /* Glassmorphism effects */
-    --glass-bg: 0 0% 100% / 0.8;
-    --glass-border: 214 75% 58% / 0.2;
-    --glass-shadow: 214 75% 58% / 0.1;
+    /* Dark glassmorphism effects */
+    --glass-bg: 220 13% 12% / 0.3;
+    --glass-border: 214 75% 58% / 0.3;
+    --glass-shadow: 214 75% 58% / 0.2;
 
-    /* AI Core colors */
-    --ai-core-primary: 214 75% 58%;
-    --ai-core-secondary: 214 95% 75%;
-    --ai-core-glow: 214 75% 58% / 0.4;
+    /* AI Core colors - enhanced for dark theme */
+    --ai-core-primary: 214 85% 65%;
+    --ai-core-secondary: 214 95% 80%;
+    --ai-core-glow: 214 85% 65% / 0.6;
 
     --radius: 1rem;
   }

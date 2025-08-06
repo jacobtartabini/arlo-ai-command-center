@@ -3,24 +3,25 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/providers/AuthProvider';
 import { useArlo } from '@/providers/ArloProvider';
 import { AiCore } from '@/components/AiCore';
-import { ChatInterface } from '@/components/ChatInterface';
-import { DraggableWidget } from '@/components/DraggableWidget';
+import { SpatialChatInterface } from '@/components/SpatialChatInterface';
+import { Core } from '@/components/Core';
 import { WeatherWidget } from '@/components/widgets/WeatherWidget';
 import { MapWidget } from '@/components/widgets/MapWidget';
 import { SystemHealthWidget } from '@/components/widgets/SystemHealthWidget';
-import { Settings, LogOut, User } from 'lucide-react';
+import { Settings, LogOut, User, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function Dashboard() {
   const { user, logout, tailscaleVerified } = useAuth();
   const { isConnected, checkConnection } = useArlo();
   const navigate = useNavigate();
-  const [widgets, setWidgets] = useState<Array<{
+  const [cores, setCores] = useState<Array<{
     id: string;
     type: 'weather' | 'map' | 'health';
     position: { x: number; y: number };
     data?: any;
   }>>([]);
+  const [showNavigation, setShowNavigation] = useState(false);
 
   useEffect(() => {
     const verifyConnection = async () => {
@@ -39,8 +40,8 @@ export default function Dashboard() {
     verifyConnection();
   }, [checkConnection, navigate, tailscaleVerified]);
 
-  const addWidget = (type: 'weather' | 'map' | 'health', data?: any) => {
-    const newWidget = {
+  const addCore = (type: 'weather' | 'map' | 'health', data?: any) => {
+    const newCore = {
       id: Date.now().toString(),
       type,
       position: { 
@@ -49,16 +50,16 @@ export default function Dashboard() {
       },
       data,
     };
-    setWidgets(prev => [...prev, newWidget]);
+    setCores(prev => [...prev, newCore]);
   };
 
-  const removeWidget = (id: string) => {
-    setWidgets(prev => prev.filter(widget => widget.id !== id));
+  const removeCore = (id: string) => {
+    setCores(prev => prev.filter(core => core.id !== id));
   };
 
-  const updateWidgetPosition = (id: string, position: { x: number; y: number }) => {
-    setWidgets(prev => prev.map(widget => 
-      widget.id === id ? { ...widget, position } : widget
+  const updateCorePosition = (id: string, position: { x: number; y: number }) => {
+    setCores(prev => prev.map(core => 
+      core.id === id ? { ...core, position } : core
     ));
   };
 
@@ -76,75 +77,124 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Navigation */}
-      <nav className="relative z-50 p-6">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-4">
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              Arlo
-            </h1>
-          </div>
-          
-          <div className="flex items-center space-x-4">
-            {/* User Info */}
-            <div className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-card/20 backdrop-blur-sm border border-border/50">
-              <User className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm text-foreground">
-                {user?.name || user?.email || (tailscaleVerified ? 'Tailscale User' : 'Guest')}
-              </span>
-            </div>
-            
-            {/* Settings */}
-            <a
-              href="/settings"
-              className="p-2 rounded-lg bg-card/20 backdrop-blur-sm border border-border/50 hover:bg-card/30 transition-all duration-300 text-muted-foreground hover:text-foreground"
-            >
-              <Settings className="w-5 h-5" />
-            </a>
-            
-            {/* Logout */}
-            <Button
-              onClick={handleLogout}
-              variant="ghost"
-              size="sm"
-              className="p-2 rounded-lg bg-card/20 backdrop-blur-sm border border-border/50 hover:bg-destructive/20 hover:text-destructive transition-all duration-300"
-            >
-              <LogOut className="w-5 h-5" />
-            </Button>
-          </div>
+    <div className="min-h-screen relative overflow-hidden" style={{ backgroundColor: '#0D1117' }}>
+      {/* Ambient Background Effects */}
+      <div className="absolute inset-0">
+        {/* Deep space gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-ai-core-primary/5 via-transparent to-accent/5" />
+        
+        {/* Floating particles */}
+        <div className="absolute inset-0">
+          {[...Array(20)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-1 h-1 bg-ai-core-primary/30 rounded-full animate-float"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 5}s`,
+                animationDuration: `${5 + Math.random() * 5}s`,
+              }}
+            />
+          ))}
         </div>
-      </nav>
+        
+        {/* Grid overlay */}
+        <div 
+          className="absolute inset-0 opacity-5"
+          style={{
+            backgroundImage: `
+              linear-gradient(hsl(var(--primary)) 1px, transparent 1px),
+              linear-gradient(90deg, hsl(var(--primary)) 1px, transparent 1px)
+            `,
+            backgroundSize: '20px 20px',
+          }}
+        />
+      </div>
 
-      {/* Background gradient effect */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5" />
+      {/* Minimal Navigation - Only visible on hover */}
+      <div 
+        className={`
+          fixed top-6 right-6 z-50 transition-all duration-500 ease-in-out
+          ${showNavigation ? 'opacity-100 translate-x-0' : 'opacity-30 translate-x-2'}
+        `}
+        onMouseEnter={() => setShowNavigation(true)}
+        onMouseLeave={() => setShowNavigation(false)}
+      >
+        <div className="backdrop-blur-2xl bg-card/20 border border-white/10 rounded-2xl p-3 flex items-center gap-3">
+          {showNavigation && (
+            <>
+              {/* User Info */}
+              <div className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-card/30 backdrop-blur-sm border border-white/10">
+                <User className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm text-foreground">
+                  {user?.name || user?.email || (tailscaleVerified ? 'Tailscale User' : 'Guest')}
+                </span>
+              </div>
+              
+              {/* Settings */}
+              <a
+                href="/settings"
+                className="p-2 rounded-lg bg-card/30 backdrop-blur-sm border border-white/10 hover:bg-card/50 transition-all duration-300 text-muted-foreground hover:text-foreground"
+              >
+                <Settings className="w-5 h-5" />
+              </a>
+              
+              {/* Logout */}
+              <Button
+                onClick={handleLogout}
+                variant="ghost"
+                size="sm"
+                className="p-2 rounded-lg bg-card/30 backdrop-blur-sm border border-white/10 hover:bg-destructive/20 hover:text-destructive transition-all duration-300"
+              >
+                <LogOut className="w-5 h-5" />
+              </Button>
+            </>
+          )}
+          
+          {!showNavigation && (
+            <Button variant="ghost" size="sm" className="p-2">
+              <Menu className="w-5 h-5" />
+            </Button>
+          )}
+        </div>
+      </div>
       
-      {/* AI Core */}
-      <DraggableWidget
-        id="ai-core"
-        initialPosition={{ x: window.innerWidth / 2 - 100, y: 100 }}
+      {/* Central Arlo Core */}
+      <Core
+        id="arlo-core"
+        title="ARLO"
+        type="ai"
+        initialPosition={{ x: window.innerWidth / 2 - 100, y: window.innerHeight / 2 - 150 }}
         onPositionChange={() => {}}
       >
         <AiCore />
-      </DraggableWidget>
+      </Core>
 
-      {/* Dynamic Widgets */}
-      {widgets.map((widget) => (
-        <DraggableWidget
-          key={widget.id}
-          id={widget.id}
-          initialPosition={widget.position}
-          onPositionChange={(position) => updateWidgetPosition(widget.id, position)}
-          onClose={() => removeWidget(widget.id)}
+      {/* Dynamic Cores */}
+      {cores.map((core) => (
+        <Core
+          key={core.id}
+          id={core.id}
+          title={
+            core.type === 'weather' ? 'Weather Core' :
+            core.type === 'map' ? 'Navigation Core' :
+            core.type === 'health' ? 'System Core' :
+            'Unknown Core'
+          }
+          type={core.type}
+          initialPosition={core.position}
+          onPositionChange={(position) => updateCorePosition(core.id, position)}
+          onClose={() => removeCore(core.id)}
         >
-          {widget.type === 'weather' && <WeatherWidget location={widget.data?.location} />}
-          {widget.type === 'map' && <MapWidget start={widget.data?.start} end={widget.data?.end} />}
-          {widget.type === 'health' && <SystemHealthWidget />}
-        </DraggableWidget>
+          {core.type === 'weather' && <WeatherWidget location={core.data?.location} />}
+          {core.type === 'map' && <MapWidget start={core.data?.start} end={core.data?.end} />}
+          {core.type === 'health' && <SystemHealthWidget />}
+        </Core>
       ))}
 
-      {/* Chat Interface */}
-      <ChatInterface onWidgetRequest={addWidget} />
+      {/* Spatial Chat Interface */}
+      <SpatialChatInterface onWidgetRequest={addCore} />
     </div>
   );
 }
