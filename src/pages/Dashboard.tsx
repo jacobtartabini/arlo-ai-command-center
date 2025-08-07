@@ -9,8 +9,12 @@ import { WeatherWidget } from '@/components/widgets/WeatherWidget';
 import { MapWidget } from '@/components/widgets/MapWidget';
 import { SystemHealthWidget } from '@/components/widgets/SystemHealthWidget';
 import { CalendarWidget } from '@/components/widgets/CalendarWidget';
-import { Settings, LogOut, User, Plus, CloudSun, Map as MapIcon, Calendar as CalendarIcon, Activity } from 'lucide-react';
+import { NotesWidget } from '@/components/widgets/NotesWidget';
+import { WebWidget } from '@/components/widgets/WebWidget';
+import { Settings, LogOut, User, Plus, CloudSun, Map as MapIcon, Calendar as CalendarIcon, Activity, StickyNote, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Dashboard() {
   const { user, logout, tailscaleVerified } = useAuth();
@@ -18,7 +22,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [cores, setCores] = useState<Array<{
     id: string;
-    type: 'weather' | 'map' | 'calendar' | 'health';
+    type: 'weather' | 'map' | 'calendar' | 'health' | 'notes' | 'web';
     position: { x: number; y: number };
     data?: any;
   }>>([]);
@@ -62,7 +66,7 @@ export default function Dashboard() {
     verifyConnection();
   }, [checkConnection, navigate, tailscaleVerified]);
 
-  const addCore = (type: 'weather' | 'map' | 'calendar' | 'health', data?: any) => {
+  const addCore = (type: 'weather' | 'map' | 'calendar' | 'health' | 'notes' | 'web', data?: any) => {
     const newCore = {
       id: Date.now().toString(),
       type,
@@ -91,6 +95,8 @@ export default function Dashboard() {
       case 'map': return 'Map Core';
       case 'calendar': return 'Calendar Core';
       case 'health': return 'Health Core';
+      case 'notes': return 'Notes Core';
+      case 'web': return 'Web Core';
       default: return 'Core';
     }
   };
@@ -212,21 +218,33 @@ export default function Dashboard() {
       </div>
 
       {/* Dynamic Cores */}
-      {cores.map((core) => (
-        <Core
-          key={core.id}
-          id={core.id}
-          title={getCoreTitle(core.type)}
-          initialPosition={core.position}
-          onPositionChange={(position) => updateCorePosition(core.id, position)}
-          onClose={() => removeCore(core.id)}
-        >
-          {core.type === 'weather' && <WeatherWidget location={core.data?.location} />}
-          {core.type === 'map' && <MapWidget start={core.data?.start} end={core.data?.end} />}
-          {core.type === 'calendar' && <CalendarWidget />}
-          {core.type === 'health' && <SystemHealthWidget />}
-        </Core>
-      ))}
+      <AnimatePresence>
+        {cores.map((core) => (
+          <motion.div
+            key={core.id}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Core
+              key={core.id}
+              id={core.id}
+              title={getCoreTitle(core.type)}
+              initialPosition={core.position}
+              onPositionChange={(position) => updateCorePosition(core.id, position)}
+              onClose={() => removeCore(core.id)}
+            >
+              {core.type === 'weather' && <WeatherWidget location={core.data?.location} />}
+              {core.type === 'map' && <MapWidget start={core.data?.start} end={core.data?.end} />}
+              {core.type === 'calendar' && <CalendarWidget />}
+              {core.type === 'health' && <SystemHealthWidget />}
+              {core.type === 'notes' && <NotesWidget />}
+              {core.type === 'web' && <WebWidget />}
+            </Core>
+          </motion.div>
+        ))}
+      </AnimatePresence>
 
       {/* Spatial Chat Interface */}
       <SpatialChatInterface onWidgetRequest={addCore} />

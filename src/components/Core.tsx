@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, ReactNode } from 'react';
 import { X, Maximize2, Minimize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { motion } from 'framer-motion';
 
 interface CoreProps {
   id: string;
@@ -130,7 +131,7 @@ export function Core({
   }
 
   return (
-    <div
+    <motion.div
       ref={coreRef}
       className={`
         fixed z-40 glass rounded-2xl shadow-2xl transition-all duration-300 ease-out
@@ -150,6 +151,10 @@ export function Core({
       onMouseDown={handleMouseDown}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      initial={{ opacity: 0, scale: 0.98 }}
+      animate={{ opacity: 1, scale: 1 }}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
     >
       {/* Header */}
       <div className="flex justify-between items-center p-4 border-b border-border/50">
@@ -182,8 +187,8 @@ export function Core({
             </Button>
           )}
         </div>
-      </div>
-      
+    
+
       {/* Content */}
       {isExpanded && (
         <div className="p-4 select-none">
