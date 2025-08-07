@@ -187,7 +187,7 @@ export function Core({
             </Button>
           )}
         </div>
-    
+      </div>
 
       {/* Content */}
       {isExpanded && (
@@ -195,6 +195,7 @@ export function Core({
           {children}
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }
+
