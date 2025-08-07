@@ -13,6 +13,9 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import { ThemeProvider } from "./providers/ThemeProvider";
 import { AuthProvider } from "./providers/AuthProvider";
 import { ArloProvider } from "./providers/ArloProvider";
+import NavBar from "./components/NavBar";
+import Chat from "./pages/Chat";
+import CalendarPage from "./pages/Calendar";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +28,7 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
+              <NavBar />
               <Routes>
                 {/* Public routes */}
                 <Route path="/login" element={<TailscaleAuth />} />
@@ -39,6 +43,16 @@ const App = () => (
                 <Route path="/dashboard" element={
                   <ProtectedRoute>
                     <Dashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/chat" element={
+                  <ProtectedRoute>
+                    <Chat />
+                  </ProtectedRoute>
+                } />
+                <Route path="/calendar" element={
+                  <ProtectedRoute>
+                    <CalendarPage />
                   </ProtectedRoute>
                 } />
                 <Route path="/settings" element={
