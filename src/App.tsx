@@ -13,7 +13,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import { ThemeProvider } from "./providers/ThemeProvider";
 import { AuthProvider } from "./providers/AuthProvider";
 import { ArloProvider } from "./providers/ArloProvider";
-import NavBar from "./components/NavBar";
+import ConditionalNavBar from "./components/ConditionalNavBar";
 import Chat from "./pages/Chat";
 import CalendarPage from "./pages/Calendar";
 
@@ -28,7 +28,7 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
-              <NavBar />
+              <ConditionalNavBar />
               <Routes>
                 {/* Public routes */}
                 <Route path="/login" element={<TailscaleAuth />} />

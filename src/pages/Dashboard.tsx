@@ -1,10 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Home,
-  MessageCircle,
-  Calendar as CalendarIcon,
-  Settings as SettingsIcon,
   Globe,
   StickyNote,
   Map as MapIcon,
@@ -21,10 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar } from "@/components/ui/calendar";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { useAuth } from "@/providers/AuthProvider";
 import { useArlo } from "@/providers/ArloProvider";
 import { useNavigate } from "react-router-dom";
@@ -51,10 +44,6 @@ export default function Dashboard() {
   const { tailscaleVerified } = useAuth();
   const { isConnected, checkConnection } = useArlo();
 
-  // Tabs and UI state
-  const [activeTab, setActiveTab] = useState<
-    "dashboard" | "chat" | "calendar" | "settings"
-  >("dashboard");
   const [cores, setCores] = useState<Core[]>([
     {
       id: "web",
@@ -136,13 +125,12 @@ export default function Dashboard() {
       timestamp: new Date(),
     },
   ]);
-  const [calendarDate, setCalendarDate] = useState<Date | undefined>(new Date());
 
   const dragRef = useRef<HTMLDivElement>(null);
 
   // SEO
   useEffect(() => {
-    document.title = "Arlo AI Dashboard — Modular Cores"; // Title tag
+    document.title = "Arlo AI Dashboard — Modular Cores";
     const desc =
       "Immersive Arlo AI dashboard with modular draggable cores, smooth animations, and dark theme.";
     let meta = document.querySelector('meta[name="description"]') as HTMLMetaElement | null;
@@ -151,9 +139,8 @@ export default function Dashboard() {
       meta.name = "description";
       document.head.appendChild(meta);
     }
-    if (meta) meta.content = desc; // Meta description
+    if (meta) meta.content = desc;
 
-    // Canonical
     if (!document.querySelector('link[rel="canonical"]')) {
       const link = document.createElement("link");
       link.rel = "canonical";
@@ -185,7 +172,8 @@ export default function Dashboard() {
 
     setMessages((prev) => [...prev, newMessage]);
     setChatInput("");
-    setActiveTab("chat");
+    // Navigate to chat page instead
+    navigate("/chat");
 
     // Simulate Arlo response
     setTimeout(() => {
@@ -371,251 +359,54 @@ export default function Dashboard() {
     </div>
   );
 
-  const renderChat = () => (
-    <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-auto p-6 space-y-4">
-        {messages.map((message) => (
-          <motion.div
-            key={message.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}
-          >
-            <div
-              className={`max-w-[70%] p-4 rounded-2xl ${
-                message.sender === "user"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-background/60 backdrop-blur-md border border-border/30 text-foreground"
-              }`}
-            >
-              <p className="text-sm">{message.text}</p>
-              <p className="text-xs opacity-70 mt-2">
-                {message.timestamp.toLocaleTimeString()}
-              </p>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-
-      <div className="p-6 border-t border-border/20">
-        <form onSubmit={handleChatSubmit} className="flex gap-2">
-          <Input
-            value={chatInput}
-            onChange={(e) => setChatInput(e.target.value)}
-            placeholder="Message Arlo..."
-            className="flex-1 bg-background/60 backdrop-blur-md border-border/30"
-          />
-          <Button type="submit" size="sm">
-            <Send className="w-4 h-4" />
-          </Button>
-        </form>
-      </div>
-    </div>
-  );
-
-  const renderCalendar = () => (
-    <div className="p-6">
-      <div className="max-w-2xl mx-auto">
-        <h2 className="text-2xl font-bold mb-6 text-foreground">Calendar</h2>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="p-6 bg-background/40 backdrop-blur-md border border-border/30">
-            <Calendar
-              mode="single"
-              selected={calendarDate}
-              onSelect={setCalendarDate}
-              className="rounded-md"
-            />
-          </Card>
-          <Card className="p-6 bg-background/40 backdrop-blur-md border border-border/30">
-            <h3 className="text-lg font-semibold mb-4 text-foreground">Upcoming Events</h3>
-            <div className="space-y-3">
-              <div className="p-3 bg-muted/30 rounded-lg">
-                <div className="font-medium text-sm text-foreground">Team Meeting</div>
-                <div className="text-xs text-muted-foreground">Today, 2:00 PM</div>
-              </div>
-              <div className="p-3 bg-muted/30 rounded-lg">
-                <div className="font-medium text-sm text-foreground">Project Review</div>
-                <div className="text-xs text-muted-foreground">Tomorrow, 10:00 AM</div>
-              </div>
-              <div className="p-3 bg-muted/30 rounded-lg">
-                <div className="font-medium text-sm text-foreground">Client Call</div>
-                <div className="text-xs text-muted-foreground">Friday, 3:30 PM</div>
-              </div>
-            </div>
-          </Card>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderSettings = () => (
-    <div className="p-6">
-      <div className="max-w-2xl mx-auto">
-        <h2 className="text-2xl font-bold mb-6 text-foreground">Settings</h2>
-        <div className="space-y-6">
-          <Card className="p-6 bg-background/40 backdrop-blur-md border border-border/30">
-            <h3 className="text-lg font-semibold mb-4 text-foreground">Appearance</h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="dark-mode" className="text-sm font-medium text-foreground">
-                  Dark Mode
-                </Label>
-                <Switch id="dark-mode" defaultChecked />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label htmlFor="animations" className="text-sm font-medium text-foreground">
-                  Animations
-                </Label>
-                <Switch id="animations" defaultChecked />
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-6 bg-background/40 backdrop-blur-md border border-border/30">
-            <h3 className="text-lg font-semibold mb-4 text-foreground">AI Assistant</h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="voice-responses" className="text-sm font-medium text-foreground">
-                  Voice Responses
-                </Label>
-                <Switch id="voice-responses" />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label htmlFor="auto-suggestions" className="text-sm font-medium text-foreground">
-                  Auto Suggestions
-                </Label>
-                <Switch id="auto-suggestions" defaultChecked />
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-6 bg-background/40 backdrop-blur-md border border-border/30">
-            <h3 className="text-lg font-semibold mb-4 text-foreground">Privacy</h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="data-collection" className="text-sm font-medium text-foreground">
-                  Data Collection
-                </Label>
-                <Switch id="data-collection" defaultChecked />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label htmlFor="analytics" className="text-sm font-medium text-foreground">
-                  Analytics
-                </Label>
-                <Switch id="analytics" />
-              </div>
-            </div>
-          </Card>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderContent = () => {
-    switch (activeTab) {
-      case "dashboard":
-        return renderDashboard();
-      case "chat":
-        return renderChat();
-      case "calendar":
-        return renderCalendar();
-      case "settings":
-        return renderSettings();
-      default:
-        return renderDashboard();
-    }
-  };
-
   // Guard: if connection failed (non-Tailscale), let existing flow redirect
   if (!tailscaleVerified && !isConnected) {
     return null;
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden" style={{ background: "#0D1117" }}>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-background/90 relative overflow-hidden">
       {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-5 pointer-events-none">
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)",
-            backgroundSize: "20px 20px",
-          }}
-        />
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute inset-0" style={{
+          backgroundImage: `radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)`,
+          backgroundSize: '20px 20px'
+        }} />
       </div>
-
-      {/* Navigation */}
-      <motion.nav
-        initial={{ y: -100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="fixed top-4 left-1/2 transform -translate-x-1/2 z-40"
-      >
-        <Card className="px-2 py-2 bg-background/60 backdrop-blur-md border border-border/30">
-          <div className="flex items-center gap-1">
-            {[
-              { id: "dashboard", label: "Dashboard", icon: Home },
-              { id: "chat", label: "Chat", icon: MessageCircle },
-              { id: "calendar", label: "Calendar", icon: CalendarIcon },
-              { id: "settings", label: "Settings", icon: SettingsIcon },
-            ].map((tab) => (
-              <Button
-                key={tab.id}
-                variant={activeTab === (tab.id as any) ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setActiveTab(tab.id as any)}
-                className="flex items-center gap-2 px-4 py-2"
-              >
-                <tab.icon className="w-4 h-4" />
-                <span className="hidden sm:inline">{tab.label}</span>
-              </Button>
-            ))}
-          </div>
-        </Card>
-      </motion.nav>
 
       {/* Main Content */}
       <main className="pt-20 pb-20 h-screen">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
-            className="h-full"
-          >
-            {renderContent()}
-          </motion.div>
-        </AnimatePresence>
+        {renderDashboard()}
       </main>
 
-      {/* Chat Input (Dashboard only) */}
-      {activeTab === "dashboard" && (
-        <motion.div
-          initial={{ x: 100, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          className="fixed bottom-6 right-6 z-30"
-        >
-          <Card className="p-4 bg-background/60 backdrop-blur-md border border-border/30 w-80">
-            <form onSubmit={handleChatSubmit} className="flex gap-2">
-              <Input
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                placeholder="Ask Arlo anything..."
-                className="flex-1 bg-background/60 backdrop-blur-md border-border/30"
-              />
-              <Button type="submit" size="sm">
-                <Send className="w-4 h-4" />
-              </Button>
-            </form>
-          </Card>
-        </motion.div>
-      )}
+      {/* Chat Input */}
+      <motion.div
+        initial={{ x: 100, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        className="fixed bottom-6 right-6 z-30"
+      >
+        <Card className="p-4 bg-background/60 backdrop-blur-md border border-border/30 w-80">
+          <form onSubmit={handleChatSubmit} className="flex gap-2">
+            <Input
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              placeholder="Ask Arlo anything..."
+              className="flex-1 bg-background/60 backdrop-blur-md border-border/30"
+            />
+            <Button type="submit" size="sm">
+              <Send className="w-4 h-4" />
+            </Button>
+          </form>
+        </Card>
+      </motion.div>
 
       {/* Arlo Badge */}
-      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="fixed bottom-6 left-6 z-30">
-        <Badge className="bg-background/60 backdrop-blur-md border border-border/30 px-3 py-1" variant="secondary">
+      <motion.div
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        className="fixed bottom-6 left-6 z-30"
+      >
+        <Badge variant="secondary" className="bg-background/60 backdrop-blur-md border border-border/30 px-3 py-1">
           <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse" />
           Arlo AI
         </Badge>
