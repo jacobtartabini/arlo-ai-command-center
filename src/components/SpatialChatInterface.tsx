@@ -16,7 +16,7 @@ interface ChatMessage {
 }
 
 interface SpatialChatInterfaceProps {
-  onWidgetRequest: (type: 'weather' | 'map' | 'health', data?: any) => void;
+  onWidgetRequest: (type: 'weather' | 'map' | 'calendar' | 'health', data?: any) => void;
 }
 
 export function SpatialChatInterface({ onWidgetRequest }: SpatialChatInterfaceProps) {
@@ -57,6 +57,8 @@ export function SpatialChatInterface({ onWidgetRequest }: SpatialChatInterfacePr
       onWidgetRequest('weather', { location });
     } else if (message.toLowerCase().includes('map') || message.toLowerCase().includes('directions')) {
       onWidgetRequest('map');
+    } else if (message.toLowerCase().includes('calendar') || message.toLowerCase().includes('schedule')) {
+      onWidgetRequest('calendar');
     } else if (message.toLowerCase().includes('system') || message.toLowerCase().includes('health')) {
       onWidgetRequest('health');
     }

@@ -8,7 +8,8 @@ import { Core } from '@/components/Core';
 import { WeatherWidget } from '@/components/widgets/WeatherWidget';
 import { MapWidget } from '@/components/widgets/MapWidget';
 import { SystemHealthWidget } from '@/components/widgets/SystemHealthWidget';
-import { Settings, LogOut, User, Plus } from 'lucide-react';
+import { CalendarWidget } from '@/components/widgets/CalendarWidget';
+import { Settings, LogOut, User, Plus, CloudSun, Map as MapIcon, Calendar as CalendarIcon, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function Dashboard() {
@@ -17,11 +18,32 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [cores, setCores] = useState<Array<{
     id: string;
-    type: 'weather' | 'map' | 'health';
+    type: 'weather' | 'map' | 'calendar' | 'health';
     position: { x: number; y: number };
     data?: any;
   }>>([]);
   const [showNavigation, setShowNavigation] = useState(false);
+ 
+  // SEO
+  useEffect(() => {
+    document.title = 'Arlo AI Dashboard - Modular Cores';
+    const meta = document.querySelector('meta[name="description"]');
+    if (meta) {
+      meta.setAttribute('content', 'Arlo AI Dashboard with modular cores, floating navigation, and immersive dark theme.');
+    } else {
+      const m = document.createElement('meta');
+      (m as HTMLMetaElement).name = 'description';
+      (m as HTMLMetaElement).content = 'Arlo AI Dashboard with modular cores, floating navigation, and immersive dark theme.';
+      document.head.appendChild(m);
+    }
+    const existingCanonical = document.querySelector('link[rel="canonical"]');
+    if (!existingCanonical) {
+      const link = document.createElement('link');
+      link.rel = 'canonical';
+      link.href = window.location.href;
+      document.head.appendChild(link);
+    }
+  }, []);
 
   useEffect(() => {
     const verifyConnection = async () => {
@@ -40,7 +62,7 @@ export default function Dashboard() {
     verifyConnection();
   }, [checkConnection, navigate, tailscaleVerified]);
 
-  const addCore = (type: 'weather' | 'map' | 'health', data?: any) => {
+  const addCore = (type: 'weather' | 'map' | 'calendar' | 'health', data?: any) => {
     const newCore = {
       id: Date.now().toString(),
       type,
@@ -67,6 +89,7 @@ export default function Dashboard() {
     switch (type) {
       case 'weather': return 'Weather Core';
       case 'map': return 'Map Core';
+      case 'calendar': return 'Calendar Core';
       case 'health': return 'Health Core';
       default: return 'Core';
     }
@@ -103,21 +126,50 @@ export default function Dashboard() {
         <div className="flex items-center gap-6">
           {/* Logo */}
           <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Arlo
+            Arlo AI Dashboard
           </h1>
           
           {/* Navigation Items */}
           <div className="flex items-center gap-4">
-            {/* Add Core Button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => addCore('weather')}
-              className="rounded-full hover:bg-primary/20"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Core
-            </Button>
+            {/* Core Shortcuts */}
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => addCore('weather')}
+                className="rounded-full hover:bg-primary/20"
+                title="Add Weather Core"
+              >
+                <CloudSun className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => addCore('map')}
+                className="rounded-full hover:bg-primary/20"
+                title="Add Map Core"
+              >
+                <MapIcon className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => addCore('calendar')}
+                className="rounded-full hover:bg-primary/20"
+                title="Add Calendar Core"
+              >
+                <CalendarIcon className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => addCore('health')}
+                className="rounded-full hover:bg-primary/20"
+                title="Add System Health Core"
+              >
+                <Activity className="w-4 h-4" />
+              </Button>
+            </div>
             
             {/* User Info */}
             <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-card/20">
@@ -171,6 +223,7 @@ export default function Dashboard() {
         >
           {core.type === 'weather' && <WeatherWidget location={core.data?.location} />}
           {core.type === 'map' && <MapWidget start={core.data?.start} end={core.data?.end} />}
+          {core.type === 'calendar' && <CalendarWidget />}
           {core.type === 'health' && <SystemHealthWidget />}
         </Core>
       ))}
